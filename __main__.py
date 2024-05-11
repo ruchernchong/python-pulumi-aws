@@ -37,7 +37,7 @@ function = aws.lambda_.Function(
 cron_expression = "*/1 * * * *"
 
 event_rule = aws.cloudwatch.EventRule(
-    "Trigger every minute", schedule_expression=cron_expression
+    "trigger-python-pulumi-aws-every-minute", schedule_expression=cron_expression
 )
 
 event_target = aws.cloudwatch.EventTarget(
