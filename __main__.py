@@ -34,7 +34,8 @@ function = aws.lambda_.Function(
     runtime=aws.lambda_.Runtime.PYTHON3D12,
 )
 
-cron_expression = "*/1 * * * *"
+# AWS has some really weird cron expression
+cron_expression = "cron(0/1 * * * ? *)"
 
 event_rule = aws.cloudwatch.EventRule(
     "trigger-python-pulumi-aws-every-minute", schedule_expression=cron_expression
