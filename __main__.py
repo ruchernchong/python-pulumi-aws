@@ -32,7 +32,6 @@ function = aws.lambda_.Function(
     handler="index.handler",
     source_code_hash=lambda_.output_base64sha256,
     runtime=aws.lambda_.Runtime.PYTHON3D12,
-    environment=aws.lambda_.FunctionEnvironmentArgs(variables={"foo": "bar"}),
 )
 
 
