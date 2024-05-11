@@ -28,6 +28,7 @@ function = aws.lambda_.Function(
     "python-pulumi-aws",
     code=pulumi.FileArchive("package.zip"),
     name="python-pulumi-aws",
+    logging_config=aws.lambda_.FunctionLoggingConfigArgs(log_format="JSON"),
     role=iam_for_lambda.arn,
     handler="index.handler",
     source_code_hash=lambda_.output_base64sha256,
