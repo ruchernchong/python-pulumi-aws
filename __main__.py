@@ -46,7 +46,7 @@ lambda_function = aws.lambda_.Function(
 # AWS has some really weird cron expression
 event_rule = aws.cloudwatch.EventRule(
     f"{project_name}-rule",
-    schedule_expression="cron(0 8 ? * * *)",
+    schedule_expression="cron(0 16 ? * * *)",
 )
 
 event_target = aws.cloudwatch.EventTarget(
