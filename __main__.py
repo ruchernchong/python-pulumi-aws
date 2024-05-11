@@ -1,52 +1,59 @@
 import pulumi
 import pulumi_archive as archive
 import pulumi_aws as aws
+import json
+
+project_name = "python-pulumi-aws"
 
 
-assume_role = aws.iam.get_policy_document(
-    statements=[
-        aws.iam.GetPolicyDocumentStatementArgs(
-            effect="Allow",
-            principals=[
-                aws.iam.GetPolicyDocumentStatementPrincipalArgs(
-                    type="Service", identifiers=["lambda.amazonaws.com"]
-                ),
+role = aws.iam.Role(
+    f"{project_name}-role",
+    assume_role_policy=json.dumps(
+        {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {"Service": "lambda.amazonaws.com"},
+                    "Action": "sts:AssumeRole",
+                }
             ],
-            actions=["sts:AssumeRole"],
-        )
-    ]
+        }
+    ),
+    tags={"pulumi:stack": "dev", "pulumi:app": project_name},
 )
 
-iam_for_lambda = aws.iam.Role(
-    "iam-for-lambda", name="iam-for-lambda", assume_role_policy=assume_role.json
+
+aws.iam.RolePolicyAttachment(
+    f"{project_name}-policy",
+    role=role.name,
+    policy_arn=aws.iam.ManagedPolicy.AWS_LAMBDA_BASIC_EXECUTION_ROLE,
 )
 
-lambda_ = archive.get_file(
+package = archive.get_file(
     type="zip", source_file="index.py", output_path="package.zip"
 )
 
-function = aws.lambda_.Function(
-    "python-pulumi-aws",
+lambda_function = aws.lambda_.Function(
+    f"{project_name}-function",
     code=pulumi.FileArchive("package.zip"),
-    name="python-pulumi-aws",
-    role=aws.iam.ManagedPolicy.AWS_LAMBDA_BASIC_EXECUTION_ROLE,
-    # role=iam_for_lambda.arn,
+    role=role.arn,
     handler="index.handler",
-    source_code_hash=lambda_.output_base64sha256,
+    source_code_hash=package.output_base64sha256,
     runtime=aws.lambda_.Runtime.PYTHON3D12,
 )
 
 # AWS has some really weird cron expression
-cron_expression = "cron(0/1 * * * ? *)"
-
 event_rule = aws.cloudwatch.EventRule(
-    "trigger-python-pulumi-aws-every-minute", schedule_expression=cron_expression
+    f"{project_name}-rule",
+    schedule_expression="cron(0/1 * * * ? *)",
+    state="DISABLED",
 )
 
 event_target = aws.cloudwatch.EventTarget(
-    "python-pulumi-aws", rule=event_rule.name, arn=function.arn
+    f"{project_name}-target", rule=event_rule.name, arn=lambda_function.arn
 )
 
 
-pulumi.export("function_id", function.id)
-pulumi.export("function_arn", function.arn)
+pulumi.export("function_id", lambda_function.id)
+pulumi.export("function_arn", lambda_function.arn)
