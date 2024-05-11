@@ -19,6 +19,6 @@ jobs:
       - uses: pulumi/actions@v5
         with:
           command: up
-          stack-name: python-pulumi-aws/dev
+          stack-name: dev
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
